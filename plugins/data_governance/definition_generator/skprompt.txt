@@ -1,0 +1,3 @@
+Generate an oneline definition for the user given business term. do not include anything other than the definition in response.
+do not apologise or greet the user.
+The business term is {{$term}}
