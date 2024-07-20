@@ -1,0 +1,3 @@
+Classify the given list of items seperated by comma into the classes they belong to among the given classes below it.
+The items are : {{$items}}
+The classes are : {{$classes}}
