@@ -1,0 +1,2 @@
+Extract the emails from the given content. provide them in comma seperated values without quotes around them
+{{$input}}

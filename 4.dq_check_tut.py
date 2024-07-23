@@ -2,6 +2,7 @@ import semantic_kernel as sk
 import asyncio
 from rich.console import Console
 from rich.markdown import Markdown
+from semantic_kernel.connectors.ai.function_call_behavior import FunctionCallBehavior
 from semantic_kernel.connectors.ai.open_ai import OpenAIChatCompletion
 from dotenv import load_dotenv
 import os
@@ -18,39 +19,44 @@ kernel.add_text_completion_service("groq", OpenAIChatCompletion(model_id=model_i
 print("A kernel is now ready.")
 
 pluginsDirectory = "./plugins"
-'''
-plugin_dg = kernel.import_semantic_skill_from_directory(pluginsDirectory, "data_governance");
 
-from semantic_kernel.planning import ActionPlanner
-
-planner = ActionPlanner(kernel)
-
-from semantic_kernel.core_skills import FileIOSkill, MathSkill, TextSkill, TimeSkill
-kernel.import_skill(MathSkill(), "math")
-kernel.import_skill(FileIOSkill(), "fileIO")
-kernel.import_skill(TimeSkill(), "time")
-kernel.import_skill(TextSkill(), "text")
-
-print("Adding the tools for the kernel to do math, to read/write files, to tell the time, and to play with text.")
-
-ask = "What is the sum of 110 and 990?"
-
-print(f"🧲 Finding the most similar function available to get that done...")
-plan = asyncio.run( planner.create_plan_async(goal=ask))
-print(f"🧲 The best single function to use is `{plan._skill_name}.{plan._function.name}`")
-'''
 from semantic_kernel.planning import SequentialPlanner
-from semantic_kernel.core_skills.text_skill import TextSkill
 from semantic_kernel.planning.sequential_planner.sequential_planner_config import SequentialPlannerConfig
+#from semantic_kernel.connectors.ai.function_call_behavior import FunctionCallBehavior
+import json
 
-writer_plugin = kernel.import_semantic_skill_from_directory(pluginsDirectory, "LiterateFriend")
+from semantic_kernel.skill_definition import (sk_function,)
+writer_plugin = kernel.import_semantic_skill_from_directory(pluginsDirectory, "data_quality")
+class EmailDataQualityChecker:
+    
+    @sk_function(
+        description="Takes email text and checks for the quality",
+        name="check_email_quality",
+        input_description="list of emails comma seperated",
+    )
+    def check_email_quality(self, emails:str) -> str:
+        all_emails = emails.split(',')
+        qa_checked = []
+        for email in all_emails:
+            trimmed_mail = email.trim()
+            qa = "fail"
+            if(trimmed_mail == trimmed_mail.upper()):
+                qa="pass"
+            qa_checked.append({"mail": trimmed_mail, "quality": qa})
+        return json.dumps(qa_checked)
 
+dq_plugin = kernel.import_skill(EmailDataQualityChecker(), skill_name="Email Data Quality Checker")
+check_email_quality = dq_plugin["check_email_quality"]
 # create an instance of sequential planner, and exclude the TextSkill from the list of functions that it can use.
 # (excluding functions that ActionPlanner imports to the kernel instance above - it uses 'this' as skillName)
 planner = SequentialPlanner(kernel, SequentialPlannerConfig(excluded_skills=["this"]))
 
 ask = """
-Tomorrow is Valentine's day. I need to come up with a poem. Translate the poem to French.
+I want the email ids from the below content.
+The content is:
+hi Mr Stark <tony.stark@gmail.com>, this is MR.Howard <HOWARD.STARK@GMAIL.COM>,
+I am delighted to tell you that we can use this semantic kernal to write the software for the Iron Man suite
+I have informed Mr.PeterParker <peter.parker@spidymail.net> about the information too.
 """
 
 plan = asyncio.run( planner.create_plan_async(goal=ask))

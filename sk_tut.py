@@ -9,8 +9,11 @@ import os
 load_dotenv()
 console = Console()
 kernel = sk.Kernel()
+kernel.add_service(OpenAIChatCompletion(model_id="llama3-8b-8192", 
+                                        api_key=os.getenv("GROQ_API_KEY"),
+                                        endpoint="https://api.groq.com/openai/v1"))
 
-kernel.add_text_completion_service("ollama", OpenAIChatCompletion(model_id="llama3-8b-8192", 
+kernel.add_text_completion_service("Groq", OpenAIChatCompletion(model_id="llama3-8b-8192", 
                                                                   api_key=os.getenv("GROQ_API_KEY"),
                                                                   endpoint="https://api.groq.com/openai/v1"))
 
